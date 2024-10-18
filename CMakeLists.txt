@@ -1,32 +1,15 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.10)  # Минимальная версия CMake
+project(MyProject)                      # Название вашего проекта
 
-project(IFilterProject VERSION 0.1.0)
+set(CMAKE_CXX_STANDARD 11)              # Установка стандарта C++
 
-# Создание библиотеки и исполняемого файла
-add_executable(22 main.cpp)
+# Укажите директорию для поиска заголовочных файлов
+include_directories(${CMAKE_SOURCE_DIR}/resources)
 
-# Копирование ресурсов (если необходимо)
-set(RESOURCE_FILES 
-    resources/ic.icns 
-    
-)
+# Добавление исполняемого файла
+add_executable(MyExecutable main.cpp)
 
-foreach(RESOURCE ${RESOURCE_FILES})
-    configure_file(${RESOURCE} ${CMAKE_BINARY_DIR}/${RESOURCE} COPYONLY)
-endforeach()
+# Например, если у вас есть файлы в папке resources:
+file(GLOB_RECURSE RESOURCE_FILES resources/*.cpp resources/*.h)
+target_sources(MyExecutable PRIVATE ${RESOURCE_FILES})
 
-# Включение CPack для создания пакетов
-include(CPack)
-
-# Настройки для CPack
-set(CPACK_PACKAGE_NAME "ip_filter")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_PACKAGE_DESCRIPTION "A description of your package.")
-set(CPACK_PACKAGE_LICENSE "MIT")
-set(CPACK_GENERATOR "DEB")
-
-
-# Установка ресурсов в пакет (если необходимо)
-install(FILES ${RESOURCE_FILES} DESTINATION resources)
-
-message("Configured PROJECT_VERSION: ${PROJECT_VERSION}")
