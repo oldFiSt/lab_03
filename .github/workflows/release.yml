@@ -25,43 +25,29 @@ jobs:
 
       # Шаг 3: Генерация файлов сборки с помощью CMake
       - name: Configure CMake
-        run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DCMAKE_BUILD_TYPE=Release
+        run: cmake . -DCMAKE_BUILD_TYPE=Release
 
       # Шаг 4: Сборка проекта
       - name: Build project
         run: cmake --build .
 
-      # Шаг 5: Создание пакета (если у вас настроен соответствующий CMake файл)
-      - name: Package project
-        run: cmake --build . --target package
+      # Шаг 5: Запуск тестов (если у вас есть тесты)
+      - name: Run tests
+        run: ctest --output-on-failure
 
-      # Шаг 6: Проверка содержимого директории (для отладки)
-      - name: List directory contents
-        run: ls -la
-
-      # Шаг 7: Проверка наличия артефакта
-      - name: Check if asset exists
-        run: |
-          if [ -f ./helloworld-0.0.*-Linux.deb ]; then
-            echo "Asset exists!";
-          else
-            echo "Asset does not exist!";
-            exit 1;
-          fi
-
-      # Шаг 8: Создание релиза на GitHub
+      # Шаг 6: Создание релиза на GitHub (если необходимо)
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.run_number }}
+          tag_name: ${{ github.run_number }}   # Используйте номер сборки как тег
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
 
-      # Шаг 9: Загрузка артефактов релиза (например, .deb файл)
+      # Шаг 7: Загрузка артефактов релиза (например, исполняемый файл)
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -69,6 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb  # Убедитесь, что путь правильный!
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_content_type: application/vnd.debian.binary-package
+          asset_path: ./MyExecutable   # Убедитесь, что путь правильный к вашему исполняемому файлу!
+          asset_name: MyExecutable       # Имя артефакта в релизе
+          asset_content_type: application/octet-stream  # Тип контента для исполняемого файла
+
