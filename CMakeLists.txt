@@ -3,17 +3,16 @@ project(MyProject)                      # Название вашего прое
 
 set(CMAKE_CXX_STANDARD 11)              # Установка стандарта C++
 
-# Установка типа сборки по умолчанию
-set(CMAKE_BUILD_TYPE Release)            # Установка типа сборки на Release
-
 # Добавление исполняемого файла
 add_executable(MyExecutable main.cpp)   # Создание исполняемого файла из main.cpp
 
-# Включение поддержки тестирования
+# Включение поддержки тестирования (опционально)
 enable_testing()
 
-# Если у вас есть тесты, добавьте их здесь
-# Например:
-# add_executable(MyTest test.cpp)
-# target_link_libraries(MyTest PRIVATE MyExecutable)
-# add_test(NAME MyTest COMMAND MyTest)  # Регистрация теста
+# Установка конфигурации для пакета
+set(CPACK_GENERATOR "DEB")              # Укажите тип пакета (например, DEB для Debian)
+set(CPACK_PACKAGE_NAME "MyExecutable")  # Имя пакета
+set(CPACK_PACKAGE_VERSION "0.1.0")      # Версия пакета
+set(CPACK_PACKAGE_DESCRIPTION "MyExecutable package description")  # Описание пакета
+
+include(CPack)                           # Включение CPack
