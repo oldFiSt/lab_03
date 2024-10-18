@@ -1,0 +1,102 @@
+name: C++ CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/github_actions
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Debug - Start for macOS
+        run: echo "Starting the job for macOS"
+
+      - name: Install dependencies on macOS
+        run: |
+          brew update
+          brew install boost cmake open-mpi
+
+      - name: Debug - Post install for macOS
+        run: echo "Dependencies installed for macOS"
+
+      - name: Create build directory for macOS
+        run: mkdir -p build
+
+      - name: Configure with CMake for macOS
+        run: |
+          cd build
+          cmake .. -DPATCH_VERSION=${{ github.run_number }}
+
+      - name: Build the project for macOS
+        run: |
+          cd build
+          cmake --build .
+
+      - name: Run tests for macOS
+        run: |
+          cd build
+          cmake --build . --target test
+
+      - name: Create package for macOS
+        run: |
+          cd build
+          cmake --build . --target package
+
+      - name: Debug - List contents of build directory after package creation for macOS
+        run: ls -l ./build
+
+      - name: Check if macOS package exists
+        run: |
+
+          if [ -f "./build/IFilterProject-0.1.0-Darwin.sh" ] || [ -f "./build/IFilterProject-0.1.0-Darwin.tar.gz" ]; then
+            echo "macOS package exists."
+          else
+            echo "macOS package does not exist."
+            exit 1
+          fi
+
+      - name: Create Release for macOS
+        id: create_release_macos
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "release-macos-${{ github.run_number }}"
+          release_name: "Release macOS ${{ github.run_number }}"
+          draft: false
+          prerelease: false
+
+      - name: Debug - List contents of build directory before upload for macOS
+        run: ls -l ./build
+
+      - name: Upload Release Asset (macOS)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release_macos.outputs.upload_url }}
+          asset_path: ./build/IFilterProject-0.1.0-Darwin.tar.gz
+          asset_name: IFilterProject-0.1.0-Darwin.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Debug - End for macOS
+        run: echo "Ending the job for macOS"
+
+      - name: Debug - List all files in build directory at the end of the job for macOS
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "List of files in build directory:"
+          ls -la ./build
