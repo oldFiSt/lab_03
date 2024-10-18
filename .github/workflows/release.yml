@@ -1,21 +1,61 @@
-name: CI Pipeline
+name: 'C++ CI'
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - feature/github_actions
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Шаг 1: Проверка исходного кода
       - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/checkout@v3
         with:
-          java-version: '11'
+          submodules: true
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      # Шаг 2: Установка зависимостей (например, Boost)
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install libboost-test-dev cmake g++ -y
 
+      # Шаг 3: Генерация файлов сборки с помощью CMake
+      - name: Configure CMake
+        run: cmake . -DPATCH_VERSION=${{ github.run_number }}
+
+      # Шаг 4: Сборка проекта
+      - name: Build project
+        run: cmake --build .
+
+      # Шаг 5: Запуск тестов
       - name: Run tests
-        run: ./gradlew test
+        run: cmake --build . --target test
+
+      # Шаг 6: Создание пакета (если у вас настроен соответствующий CMake файл)
+      - name: Package project
+        run: cmake --build . --target package
+
+      # Шаг 7: Создание релиза на GitHub
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
+
+      # Шаг 8: Загрузка артефактов релиза (например, .deb файл)
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb # Убедитесь, что путь правильный
+          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/vnd.debian.binary-package
