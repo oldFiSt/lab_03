@@ -3,13 +3,17 @@ project(MyProject)                      # Название вашего прое
 
 set(CMAKE_CXX_STANDARD 11)              # Установка стандарта C++
 
-# Укажите директорию для поиска заголовочных файлов
-include_directories(${CMAKE_SOURCE_DIR}/resources)
+# Установка типа сборки по умолчанию
+set(CMAKE_BUILD_TYPE Release)            # Установка типа сборки на Release
 
 # Добавление исполняемого файла
-add_executable(MyExecutable main.cpp)
+add_executable(MyExecutable main.cpp)   # Создание исполняемого файла из main.cpp
 
-# Например, если у вас есть файлы в папке resources:
-file(GLOB_RECURSE RESOURCE_FILES resources/*.cpp resources/*.h)
-target_sources(MyExecutable PRIVATE ${RESOURCE_FILES})
+# Включение поддержки тестирования
+enable_testing()
 
+# Если у вас есть тесты, добавьте их здесь
+# Например:
+# add_executable(MyTest test.cpp)
+# target_link_libraries(MyTest PRIVATE MyExecutable)
+# add_test(NAME MyTest COMMAND MyTest)  # Регистрация теста

@@ -22,15 +22,15 @@ jobs:
 
       # Шаг 3: Генерация файлов сборки с помощью CMake
       - name: Configure CMake
-        run: cmake . -DPATCH_VERSION=${{ github.run_number }}
+        run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DCMAKE_BUILD_TYPE=Release
 
       # Шаг 4: Сборка проекта
       - name: Build project
         run: cmake --build .
 
-      # Шаг 5: Запуск тестов
+      # Шаг 5: Запуск тестов (если есть)
       - name: Run tests
-        run: cmake --build . --target test
+        run: ctest --verbose  # Используйте ctest для запуска всех зарегистрированных тестов
 
       # Шаг 6: Создание пакета (если у вас настроен соответствующий CMake файл)
       - name: Package project
