@@ -42,7 +42,7 @@ jobs:
       # Шаг 7: Проверка наличия артефакта
       - name: Check if asset exists
         run: |
-          if ls ./helloworld-0.0.*-Linux.deb 1> /dev/null 2>&1; then
+          if [ -f ./helloworld-0.0.*-Linux.deb ]; then
             echo "Asset exists!";
           else
             echo "Asset does not exist!";
