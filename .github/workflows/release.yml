@@ -28,7 +28,7 @@ jobs:
       - name: Package project
         run: cmake --build . --target package
 
-      - name: List directory contents
+      - name: List directory contents after packaging
         run: ls -la
 
       - name: Check if asset exists
