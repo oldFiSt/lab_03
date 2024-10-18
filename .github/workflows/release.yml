@@ -35,7 +35,27 @@ jobs:
       - name: Run tests
         run: ctest --output-on-failure
 
-      # Шаг 6: Создание релиза на GitHub (если необходимо)
+      # Шаг 6: Создание пакета (если необходимо)
+      - name: Package project
+        run: cmake --build . --target package
+
+      # Шаг 7: Проверка содержимого директории (для отладки)
+      - name: List directory contents
+        run: ls -la
+
+      # Шаг 8: Проверка наличия артефакта и его загрузка на GitHub Releases
+      - name: Check if asset exists and upload to release
+        id: upload_release_asset
+        run: |
+          if [ -f ./MyExecutable-macos.* ]; then
+            echo "Asset exists!";
+            echo "::set-output name=asset_path::$(pwd)/MyExecutable-macos.*"
+          else
+            echo "Asset does not exist!";
+            exit 1;
+          fi
+      
+      # Шаг 9: Создание релиза на GitHub (если необходимо)
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -47,7 +67,7 @@ jobs:
           draft: false
           prerelease: false
 
-      # Шаг 7: Загрузка артефактов релиза (например, исполняемый файл)
+      # Шаг 10: Загрузка артефактов релиза (например, исполняемый файл)
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -55,7 +75,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./MyExecutable   # Убедитесь, что путь правильный к вашему исполняемому файлу!
-          asset_name: MyExecutable       # Имя артефакта в релизе
+          asset_path: ${{ steps.upload_release_asset.outputs.asset_path }}   # Путь к вашему исполняемому файлу!
+          asset_name: MyExecutable-macos   # Имя артефакта в релизе с учетом платформы.
           asset_content_type: application/octet-stream  # Тип контента для исполняемого файла
 
