@@ -17,8 +17,8 @@ set(CPACK_GENERATOR "DEB")              # Укажите тип пакета (н
 set(CPACK_PACKAGE_NAME "MyExecutable")  # Имя пакета
 set(CPACK_PACKAGE_VERSION "0.1.0")      # Версия пакета
 set(CPACK_PACKAGE_DESCRIPTION "MyExecutable package description")  # Описание пакета
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Your Name <your.email@example.com>")  # Укажите имя и email поддерживающего
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6)")  # Укажите зависимости, если есть
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Your Name <your.email@example.com>")  # Имя и email поддерживающего
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6)")  # Зависимости, если есть
 
 # Дополнительные параметры
 set(CPACK_PACKAGE_CONTACT "Your Name <your.email@example.com>")  # Контактная информация
@@ -26,4 +26,3 @@ set(CPACK_PACKAGE_HOMEPAGE "https://example.com")                # Домашн�
 set(CPACK_PACKAGE_LICENSE "MIT")                                  # Лицензия проекта
 
 include(CPack)                           # Включение CPack
-
