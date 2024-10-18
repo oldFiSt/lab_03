@@ -1,109 +1,21 @@
-name: C++ CI
+name: CI Pipeline
 
-on:
-  push:
-    branches:
-      - main
-      - feature/github_actions
-
-permissions:
-  contents: write
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60  # Для решения ошибки с Check if
-
     steps:
-      - name: Checkout repository #Получение кода из репозитория
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
         with:
-          submodules: true
+          java-version: '11'
 
-      - name: Debug - Start
-        run: echo "Starting the job"
-
-      - name: Install dependencies # Установка зависимостей 
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libboost-all-dev \ #Библиотека BOOST
-            cmake \
-            openmpi-bin \
-            libopenmpi-dev
-
-      # Отладка перед сборкой
-      - name: Debug - Post install
-        run: echo "Dependencies installed"
-
-      - name: Create build directory # Директория сборки
-        run: mkdir -p build
-
-      - name: Configure with CMake
-        run: |
-          cd build
-          cmake .. -DPATCH_VERSION=${{ github.run_number }}
-          
-      - name: Build the project
-        run: |
-          cd build
-          cmake --build .
+      - name: Build with Gradle
+        run: ./gradlew build
 
       - name: Run tests
-        run: |
-          cd build
-          cmake --build . --target test
-
-      - name: Create package
-        run: |
-          cd build
-          cmake --build . --target package
-
-      # Отладка перед проверкой существования пакета
-      - name: Debug - List contents of build directory after package creation
-        run: ls -l ./build
-
-      # Проверка существования пакета для Linux
-      - name: Check if Linux package exists //  Шаг для проверки существования созданного пакета 
-        run: |
-          if [ -f "./build/IFilterProject-0.1.0-Linux.sh" ]; then  # Убедитесь, что имя файла правильное
-            echo "Linux package exists."
-          else
-            echo "Linux package does not exist."
-            exit 1
-          fi
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: "release-${{ github.run_number }}"
-          release_name: "Release ${{ github.run_number }}"
-          draft: false
-          prerelease: false
-
-      # Отладка перед загрузкой ассета
-      - name: Debug - List contents of build directory before upload
-        run: ls -l ./build
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/IFilterProject-0.1.0-Linux.sh  # Путь к созданному пакету 
-          asset_name: IFilterProject-0.1.0-Linux.sh 
-          asset_content_type: application/x-sh
-
-      - name: Debug - End
-        run: echo "Ending the job"
-      
-      - name: Debug - List all files in build directory at the end of the job
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "List of files in build directory:"
-          ls -la ./build
+        run: ./gradlew test
