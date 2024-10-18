@@ -17,4 +17,9 @@ set(CPACK_PACKAGE_DESCRIPTION "MyExecutable package description")  # Описа�
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Your Name <your.email@example.com>")  # Укажите имя и email поддерживающего
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.3.1-6)")  # Укажите зависимости, если есть
 
+# Дополнительные параметры (рекомендуется)
+set(CPACK_PACKAGE_CONTACT "Your Name <your.email@example.com>")  # Контактная информация
+set(CPACK_PACKAGE_HOMEPAGE "https://example.com")                # Домашняя страница проекта
+set(CPACK_PACKAGE_LICENSE "MIT")                                  # Лицензия проекта
+
 include(CPack)                           # Включение CPack
