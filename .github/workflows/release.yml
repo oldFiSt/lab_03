@@ -8,42 +8,32 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest  # Используем macOS для выполнения работы
+    runs-on: macos-latest  
     permissions:
-      contents: write  # Необходимое разрешение для создания релиза
+      contents: write  
 
     steps:
-      # Шаг 1: Проверка исходного кода
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          submodules: true
 
-      # Шаг 2: Установка зависимостей (например, Boost)
       - name: Install dependencies
-        run: brew install cmake boost  # Установка CMake и Boost через Homebrew
+        run: brew install cmake boost 
 
-      # Шаг 3: Генерация файлов сборки с помощью CMake
       - name: Configure CMake
         run: cmake . -DCMAKE_BUILD_TYPE=Release
 
-      # Шаг 4: Сборка проекта
       - name: Build project
         run: cmake --build .
 
-      # Шаг 5: Запуск тестов (если у вас есть тесты)
       - name: Run tests
         run: ctest --output-on-failure
 
-      # Шаг 6: Создание пакета (если необходимо)
       - name: Package project
         run: cmake --build . --target package
 
-      # Шаг 7: Проверка содержимого директории (для отладки)
       - name: List directory contents
         run: ls -la
 
-      # Шаг 8: Проверка наличия артефакта и его загрузка на GitHub Releases
       - name: Check if asset exists and upload to release
         id: upload_release_asset
         run: |
@@ -55,19 +45,17 @@ jobs:
             exit 1;
           fi
       
-      # Шаг 9: Создание релиза на GitHub (если необходимо)
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.run_number }}   # Используйте номер сборки как тег
+          tag_name: ${{ github.run_number }}   
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
 
-      # Шаг 10: Загрузка артефактов релиза (например, исполняемый файл)
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -75,7 +63,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.upload_release_asset.outputs.asset_path }}   # Путь к вашему исполняемому файлу!
-          asset_name: MyExecutable-macos   # Имя артефакта в релизе с учетом платформы.
-          asset_content_type: application/octet-stream  # Тип контента для исполняемого файла
-
+          asset_path: ${{ steps.upload_release_asset.outputs.asset_path }}   
+          asset_name: MyExecutable-macos   
+          asset_content_type: application/octet-stream  
