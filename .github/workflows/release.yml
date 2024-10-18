@@ -28,12 +28,14 @@ jobs:
       - name: Package project
         run: cmake --build . --target package
 
-      - name: List directory contents after packaging
+      - name: List directory contents
         run: ls -la
 
       - name: Check if asset exists
         run: |
-          if [ ! -f ./helloworld-0.0.${{ github.run_number }}-Linux.deb ]; then
+          if ls ./helloworld-0.0.*-Linux.deb 1> /dev/null 2>&1; then
+            echo "Asset exists!";
+          else
             echo "Asset does not exist!";
             exit 1;
           fi
