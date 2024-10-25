@@ -3,11 +3,10 @@
 template <typename T>
 class DynamicArray {
 private:
-    T* data; //указатель на массив элементов типа Т
+    T* data; // указатель на массив элементов типа T
     size_t capacity;
     size_t length;
-    
-    //служит для увеличения размера массива, когда размер достигает capacity, он вызывается и увеличивает размер на 50%
+
     void resize(size_t new_capacity) {
         T* new_data = new T[new_capacity];
         for (size_t i = 0; i < length; ++i) {
@@ -18,32 +17,33 @@ private:
         capacity = new_capacity;
     }
 
-
 public:
-    //Начальная вместимость равна 10. Это означает, что при создании контейнера выделяется память для хранения 10 элементов типа Т
-    DynamicArray(size_t initial_capacity = 10) 
+    DynamicArray(size_t initial_capacity = 10)
         : capacity(initial_capacity), length(0), data(new T[initial_capacity]) {}
 
     ~DynamicArray() {
         delete[] data;
     }
 
+    // Конструктор копирования
     DynamicArray(const DynamicArray& other)
-        : capacity(other.capacity), length(other.length), data(new T[other.capacity]) {//копирует данные и выделяет память для нового массива
+        : capacity(other.capacity), length(other.length), data(new T[other.capacity]) {
         for (size_t i = 0; i < length; ++i) {
             data[i] = other.data[i];
         }
     }
 
-    DynamicArray(DynamicArray&& other) noexcept //конструктор перемещения, который принимает r-value ссылку на другой объект noexcept - без исключений
+    // Конструктор перемещения
+    DynamicArray(DynamicArray&& other) noexcept
         : capacity(other.capacity), length(other.length), data(other.data) {
-        other.data = nullptr;//обновление ресурсов у перемещаемого объекта 
+        other.data = nullptr; // Обнуление указателя у перемещаемого объекта
         other.length = 0;
         other.capacity = 0;
     }
 
-    DynamicArray& operator=(const DynamicArray& other) {//оператор присваивания копирования 
-        if (this == &other) return *this;//проверка для предотвращения ненужного выполнения кода
+    // Оператор присваивания копирования
+    DynamicArray& operator=(const DynamicArray& other) {
+        if (this == &other) return *this; // Проверка на самоприсваивание
         delete[] data;
         capacity = other.capacity;
         length = other.length;
@@ -54,23 +54,34 @@ public:
         return *this;
     }
 
+    // Оператор присваивания перемещения
     DynamicArray& operator=(DynamicArray&& other) noexcept {
-        if (this == &other) return *this;
+        if (this == &other) return *this; // Проверка на самоприсваивание
         delete[] data;
         capacity = other.capacity;
         length = other.length;
         data = other.data;
+
+        // Обнуляем перемещаемый объект
         other.data = nullptr;
         other.length = 0;
         other.capacity = 0;
+
         return *this;
     }
 
     void push_back(const T& value) {
         if (length == capacity) {
-            resize(capacity + capacity / 2);//чтобы увеличить размер массива
+            resize(capacity + capacity / 2);
         }
         data[length++] = value;
+    }
+
+    void push_back(T&& value) { // Добавляем поддержку r-value ссылки для push_back
+        if (length == capacity) {
+            resize(capacity + capacity / 2);
+        }
+        data[length++] = std::move(value);
     }
 
     void insert(size_t index, const T& value) {
@@ -91,6 +102,28 @@ public:
             data[i] = std::move(data[i + 1]);
         }
         --length;
+    }
+
+    void insert_middle(const T& value) {
+        size_t middle_index = length / 2; // Вычисляем индекс середины массива
+        insert(middle_index, value); // Вставляем значение в середину
+    }
+
+    void shrink_to_fit() { //метод для очищения памяти в случаем если выделено слишком много ячеек
+       if (length < capacity) { 
+           T* new_data = new T[length]; // Создаем новый массив с размером, равным текущей длине 
+           for (size_t i = 0; i < length; ++i) { 
+               new_data[i] = std::move(data[i]); // Перемещаем элементы в новый массив 
+           } 
+           delete[] data; // Освобождаем старый массив 
+           data = new_data; // Устанавливаем указатель на новый массив 
+           capacity = length; // Обновляем емкость 
+       } 
+   }
+
+    T get(size_t index) const {
+        if (index >= length) throw std::out_of_range("Index out of range");
+        return data[index];
     }
 
     size_t size() const {
@@ -165,8 +198,74 @@ public:
         }
     }
 
+    DoublyLinkedList(const DoublyLinkedList& other) : head(nullptr), tail(nullptr), length(0) {
+       for (DoublyNode<T>* current = other.head; current != nullptr; current = current->next) {
+           push_back(current->data); // Используем push_back для копирования данных
+       }
+    }
+
+    DoublyLinkedList(DoublyLinkedList&& other) noexcept : head(other.head), tail(other.tail), length(other.length) {
+       other.head = nullptr; // Обнуляем указатели у перемещаемого объекта
+       other.tail = nullptr;
+       other.length = 0;
+    }
+
    void push_back(const T& value) { 
        DoublyNode<T>* newNode = new DoublyNode<T>(value); 
+       if (!head) { 
+           head = tail = newNode; 
+       } else { 
+           tail->next = newNode; 
+           newNode->prev = tail;  
+           tail = newNode; 
+       } 
+       ++length; 
+   }
+
+   DoublyLinkedList& operator=(const DoublyLinkedList& other) {
+       if (this == &other) return *this; // Проверка на самоприсваивание
+
+       // Освобождаем текущие ресурсы
+       while (head) {
+           DoublyNode<T>* temp = head;
+           head = head->next;
+           delete temp;
+       }
+
+       head = tail = nullptr; 
+       length = 0;
+
+       for (DoublyNode<T>* current = other.head; current != nullptr; current = current->next) {
+           push_back(current->data); // Используем push_back для копирования данных
+       }
+       
+       return *this;
+   }
+
+    DoublyLinkedList& operator=(DoublyLinkedList&& other) noexcept {
+       if (this == &other) return *this; // Проверка на самоприсваивание
+
+       // Освобождаем текущие ресурсы
+       while (head) {
+           DoublyNode<T>* temp = head;
+           head = head->next;
+           delete temp;
+       }
+
+       head = other.head; 
+       tail = other.tail; 
+       length = other.length;
+
+       // Обнуляем перемещаемый объект
+       other.head = nullptr; 
+       other.tail = nullptr; 
+       other.length = 0;
+
+       return *this;
+   }
+
+   void push_back(T&& value) { // Добавляем поддержку r-value ссылки для push_back
+       DoublyNode<T>* newNode = new DoublyNode<T>(std::move(value)); 
        if (!head) { 
            head = tail = newNode; 
        } else { 
@@ -202,18 +301,18 @@ public:
            return; 
        } 
 
-       DoublyNode<T>* newNode = new DoublyNode<T>(value); 
+       DoublyNode<T>* newNode = new DoublyNode<T>(value); //создание нового узла
        DoublyNode<T>* current = head;
 
-       for (size_t i = 0; i < index; ++i) { 
+       for (size_t i = 0; i < index; ++i) { //перемещаемся к нужному элементу
            current = current->next; 
        } 
 
        newNode->next = current;      // Устанавливаем указатель next у нового узла 
        newNode->prev = current->prev; // Устанавливаем указатель prev у нового узла 
 
-       if (current->prev)
-           current->prev->next = newNode;
+       if (current->prev)//обновление указателя следующего узла предыдущего элемента
+           current->prev->next = newNode;//если узел не является головой списка мы обновляем указатель у предыдущего
 
        current->prev = newNode;
 
@@ -223,18 +322,23 @@ public:
        ++length; 
    }
 
+    void insert_middle(const T& value) {
+       size_t middle_index = length / 2; // Вычисляем индекс середины списка
+       insert(middle_index, value); // Вставляем значение в середину
+   }
+
    void erase(size_t index) { 
        if (index >= length) throw std::out_of_range("Index out of range"); 
        
-       DoublyNode<T>* current = head;
+       DoublyNode<T>* current = head;//иницаилизируется на голову списка, служит для перемещения по спис
 
        for (size_t i = 0; i < index; ++i)
-           current = current->next;
+           current = current->next; //перемещает указатель к узлу, который находится на index
 
-       if (current->prev)
+       if (current->prev)//если у текущего есть предыдущий узел мы обновляем 
            current->prev->next = current->next;
 
-       if (current->next)
+       if (current->next)//обновление указателя предыдущего узла
            current->next->prev = current->prev;
 
        if (current == head)
@@ -256,6 +360,17 @@ public:
       } 
       std::cout << std::endl; 
    } 
+
+   T get(size_t index) const { 
+       if (index >= length) throw std::out_of_range("Index out of range"); 
+
+       DoublyNode<T>* current = head; 
+       for (size_t i = 0; i < index && current != nullptr; ++i) { 
+           current = current->next; 
+       } 
+
+       return current->data; 
+   }
 
    size_t getSize() const { return length; } 
 
@@ -321,8 +436,8 @@ public:
         Node<T>* newNode = new Node<T>(value);
         if (!head) {
             head = newNode;
-        } else {
-            Node<T>* temp = head;
+        } else {//если списое не пуст, мы инициализируем временный указатель на голову
+            Node<T>* temp = head;//с помощью цикла проходимся до последнего узла
             while (temp->next) {
                 temp = temp->next;
             }
@@ -346,6 +461,11 @@ public:
             temp->next = newNode;
         }
         ++length;
+    }
+
+    void insert_middle(const T& value) {
+        size_t middle_index = length / 2; // Вычисляем индекс середины списка
+        insert(middle_index, value); // Вставляем значение в середину
     }
 
     void erase(size_t index) {
@@ -412,8 +532,9 @@ int main() {
     arr.insert(0, 10);
     std::cout << "Вывод содержимого с десяткой в начале " << '\n';
     arr.print();  
-
-    arr.insert(4, 20);
+    
+    //поменять на автоматический подсчёт
+    arr.insert_middle(4);
     std::cout << "Вывод содержимого с 20 в середине " << '\n';
     arr.print();  
 
@@ -432,18 +553,23 @@ int main() {
     
     list.print();
 
+    std:: cout << "Вывод однонаправленного списка с удаленными элементами: " << '\n';
+
     list.erase(2);
     list.erase(4);
     list.erase(5);
     
     list.print();
 
+    std:: cout << "Вывод однонаправленного списка с 10 в начале: " << '\n';   
     list.insert(0, 10);
     list.print(); 
 
-    list.insert(4, 20);
+    std:: cout << "Вывод однонаправленного списка с 4 в середине: " << '\n';
+    list.insert_middle(4);
     list.print(); 
 
+    std:: cout << "Вывод однонаправленного списка с 30 в конце: " << '\n';
     list.push_back(30);
     list.print();
     
@@ -456,39 +582,12 @@ int main() {
     std::cout << "Двунаправленный список:\n";
     doubleList.print();
 
+    std:: cout << "Двунаправленный список с 4 в середине и удаленным третьим элементом " << '\n';
     doubleList.erase(2); 
-    doubleList.insert(4, 20);
-
-    std::cout << "После изменений:\n";
+    doubleList.insert_middle(4);
     doubleList.print();
 
-    SinglyLinkedList<int> sing_list_1;
     
-    for (int i = 0; i < 10; i++)
-    {
-     sing_list_1.push_back(i);
-    }
-
-    std::cout << "Однонаправленный список:\n";
-
-    for (auto it = sing_list_1.begin(); it != sing_list_1.end(); ++it) {
-        std::cout << *it << " "; 
-    }
-
-    std::cout << std::endl;
-
-    DoublyLinkedList<int> double_list_1;
-    for (int i = 0; i < 10; ++i) {
-        double_list_1.push_back(i);
-    }
-
-    std::cout << "Двунаправленный список:\n";
-    
-    for (auto it = double_list_1.begin(); it != double_list_1.end(); ++it) {
-        std::cout << *it << " "; 
-    }
-    
-    std::cout << std::endl;
 
     return 0;
 }
